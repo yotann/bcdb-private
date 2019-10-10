@@ -247,6 +247,26 @@ static int Mux() {
   return WriteModule(*M);
 }
 
+//bcdb FetchBasicFunctions
+
+static cl::SubCommand ExtractBasicCommand("extract-basic-functions", "Extract basic functions to destination");
+
+static cl::opt<std::string> DestPath("dest_path", cl::desc("full destination path"),
+                                  cl::sub(ExtractBasicCommand), cl::Required);
+
+static int ExtractBasicFunctions(){
+  ExitOnError Err("bcdb extractbasicfunctions: ");
+  std::unique_ptr<BCDB> db = Err(BCDB::Open(Uri));
+  std::string dest_path = DestPath;
+  std::vector<std::string> basicfuncs = Err(db->FetchBasicFunctions(dest_path));
+  outs() <<"Extracting "<< basicfuncs.size() <<" functions to "<< dest_path <<"\n";
+  for (auto &basicfunc : basicfuncs) {
+    outs() << basicfunc << "\n";
+  }
+  return 0;
+}
+
+
 // main
 
 int main(int argc, char **argv) {
@@ -275,6 +295,8 @@ int main(int argc, char **argv) {
     return Merge();
   } else if (MuxCommand) {
     return Mux();
+  } else if (ExtractBasicCommand){
+    return ExtractBasicFunctions();
   } else {
     cl::PrintHelpMessage(false, true);
     return 0;
