@@ -17,6 +17,8 @@
 #include <memory>
 #include <string>
 
+#include "ExtractBasicFunctions.h"
+
 using namespace bcdb;
 using namespace llvm;
 
@@ -73,6 +75,20 @@ static int Delete() {
   std::unique_ptr<BCDB> db = Err(BCDB::Open(Uri));
   StringRef Name = DeleteHeadname;
   Err(db->Delete(Name));
+  return 0;
+}
+
+// bcdb extract-basic-functions
+
+static cl::SubCommand ExtractBasicFunctionsCommand("extract-basic-functions", "Extract basic functions to tar file");
+
+static cl::opt<std::string> ExtractBasicFunctionsOutputFilename("o", cl::desc("<output tar file>"),
+                                  cl::sub(ExtractBasicFunctionsCommand), cl::Required);
+
+static int ExtractBasicFunctions(){
+  ExitOnError Err("bcdb extract-basic-functions: ");
+  std::unique_ptr<BCDB> db = Err(BCDB::Open(Uri));
+  Err(ExtractBasicFunctions(*db, ExtractBasicFunctionsOutputFilename));
   return 0;
 }
 
@@ -247,26 +263,6 @@ static int Mux() {
   return WriteModule(*M);
 }
 
-//bcdb FetchBasicFunctions
-
-static cl::SubCommand ExtractBasicCommand("extract-basic-functions", "Extract basic functions to destination");
-
-static cl::opt<std::string> DestPath("dest_path", cl::desc("full destination path"),
-                                  cl::sub(ExtractBasicCommand), cl::Required);
-
-static int ExtractBasicFunctions(){
-  ExitOnError Err("bcdb extractbasicfunctions: ");
-  std::unique_ptr<BCDB> db = Err(BCDB::Open(Uri));
-  std::string dest_path = DestPath;
-  std::vector<std::string> basicfuncs = Err(db->FetchBasicFunctions(dest_path));
-  outs() <<"Extracting "<< basicfuncs.size() <<" functions to "<< dest_path <<"\n";
-  for (auto &basicfunc : basicfuncs) {
-    outs() << basicfunc << "\n";
-  }
-  return 0;
-}
-
-
 // main
 
 int main(int argc, char **argv) {
@@ -279,6 +275,8 @@ int main(int argc, char **argv) {
     return Add();
   } else if (DeleteCommand) {
     return Delete();
+  } else if (ExtractBasicFunctionsCommand){
+    return ExtractBasicFunctions();
   } else if (GetCommand) {
     return Get();
   } else if (GetFunctionCommand) {
@@ -295,8 +293,6 @@ int main(int argc, char **argv) {
     return Merge();
   } else if (MuxCommand) {
     return Mux();
-  } else if (ExtractBasicCommand){
-    return ExtractBasicFunctions();
   } else {
     cl::PrintHelpMessage(false, true);
     return 0;

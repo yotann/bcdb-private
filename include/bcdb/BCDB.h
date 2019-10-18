@@ -46,8 +46,6 @@ public:
 
   llvm::Expected<std::unique_ptr<llvm::Module>>
   LoadParts(llvm::StringRef Name, std::map<std::string, std::string> &PartIDs);
-
-  llvm::Expected<std::vector<std::string>> FetchBasicFunctions(std::string dest_path);
 };
 
 } // end namespace bcdb

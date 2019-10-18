@@ -3,8 +3,6 @@
 #include "bcdb/AlignBitcode.h"
 #include "bcdb/Split.h"
 
-#include "llvm/Support/TarWriter.h"
-
 #include <llvm/Bitcode/BitcodeReader.h>
 #include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/IR/Constants.h>
@@ -260,35 +258,6 @@ Expected<std::unique_ptr<Module>> BCDB::GetFunctionById(StringRef Id) {
   auto value = db->get_value_by_id(Id);
   return LoadModuleFromValue(db.get(), value.get(), Id, Context);
 }
-
-
-Expected<std::vector<std::string>> BCDB::FetchBasicFunctions(std::string dest_path) {
-  Expected<std::unique_ptr<TarWriter>> tar_writer = TarWriter::create(dest_path, "basic_functions");
-  if(!tar_writer) return tar_writer.takeError();
-
-  std::vector<std::string> basic_functions;
-  Expected<std::vector<std::string>> all_functions = ListAllFunctions();
-  if(!all_functions) return all_functions.takeError();
-  for (auto &func_id : *all_functions){
-    auto M = GetFunctionById(func_id);
-    if (!M) return M.takeError();
-    for (Function &F : **M) {
-      //skip declarations
-      if (!F.isDeclaration()){
-        if(F.size() == 1){
-          SmallVector<char, 0> Buffer;
-          WriteUnalignedModule(**M, Buffer);
-          basic_functions.push_back(func_id);
-          //append file to archive
-          std::string basic_func(Buffer.begin(), Buffer.end());
-          (*tar_writer)->append(func_id + ".bc", basic_func);
-        }
-      }
-    }
-  }
-  return basic_functions;
-}
-
 
 namespace {
 class BCDBSplitLoader : public SplitLoader {
