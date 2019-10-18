@@ -24,7 +24,7 @@ Error bcdb::ExtractBasicFunctions(BCDB &bcdb, StringRef dest_path) {
       if (!F.isDeclaration()){
         if(F.size() == 1){
           SmallVector<char, 0> Buffer;
-          WriteUnalignedModule(**M, Buffer);
+          WriteAlignedModule(**M, Buffer);
           basic_functions.push_back(func_id);
           //append file to archive
           std::string basic_func(Buffer.begin(), Buffer.end());
