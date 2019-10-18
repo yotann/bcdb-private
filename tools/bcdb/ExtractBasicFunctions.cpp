@@ -10,25 +10,28 @@ using namespace bcdb;
 using namespace llvm;
 
 Error bcdb::ExtractBasicFunctions(BCDB &bcdb, StringRef dest_path) {
-  Expected<std::unique_ptr<TarWriter>> tar_writer = TarWriter::create(dest_path, "basic_functions");
-  if(!tar_writer) return tar_writer.takeError();
+  Expected<std::unique_ptr<TarWriter>> TarOrErr =
+      TarWriter::create(dest_path, "functions");
+  if (!TarOrErr)
+    return TarOrErr.takeError();
+  auto Tar = std::move(*TarOrErr);
 
-  std::vector<std::string> basic_functions;
   Expected<std::vector<std::string>> all_functions = bcdb.ListAllFunctions();
-  if(!all_functions) return all_functions.takeError();
-  for (auto &func_id : *all_functions){
-    auto M = bcdb.GetFunctionById(func_id);
-    if (!M) return M.takeError();
-    for (Function &F : **M) {
-      //skip declarations
-      if (!F.isDeclaration()){
-        if(F.size() == 1){
+  if (!all_functions)
+    return all_functions.takeError();
+
+  for (auto &func_id : *all_functions) {
+    auto MOrErr = bcdb.GetFunctionById(func_id);
+    if (!MOrErr)
+      return MOrErr.takeError();
+    auto M = std::move(*MOrErr);
+
+    for (Function &F : *M) {
+      if (!F.isDeclaration()) {
+        if (F.size() == 1) {
           SmallVector<char, 0> Buffer;
-          WriteAlignedModule(**M, Buffer);
-          basic_functions.push_back(func_id);
-          //append file to archive
-          std::string basic_func(Buffer.begin(), Buffer.end());
-          (*tar_writer)->append(func_id + ".bc", basic_func);
+          WriteAlignedModule(*M, Buffer);
+          Tar->append(func_id + ".bc", StringRef(Buffer.data(), Buffer.size()));
         }
       }
     }

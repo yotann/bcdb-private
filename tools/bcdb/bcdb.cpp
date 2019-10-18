@@ -80,12 +80,16 @@ static int Delete() {
 
 // bcdb extract-basic-functions
 
-static cl::SubCommand ExtractBasicFunctionsCommand("extract-basic-functions", "Extract basic functions to tar file");
+static cl::SubCommand
+    ExtractBasicFunctionsCommand("extract-basic-functions",
+                                 "Extract basic functions to tar file");
 
-static cl::opt<std::string> ExtractBasicFunctionsOutputFilename("o", cl::desc("<output tar file>"),
-                                  cl::sub(ExtractBasicFunctionsCommand), cl::Required);
+static cl::opt<std::string>
+    ExtractBasicFunctionsOutputFilename("o", cl::desc("<output tar file>"),
+                                        cl::sub(ExtractBasicFunctionsCommand),
+                                        cl::Required);
 
-static int ExtractBasicFunctions(){
+static int ExtractBasicFunctions() {
   ExitOnError Err("bcdb extract-basic-functions: ");
   std::unique_ptr<BCDB> db = Err(BCDB::Open(Uri));
   Err(ExtractBasicFunctions(*db, ExtractBasicFunctionsOutputFilename));
@@ -275,7 +279,7 @@ int main(int argc, char **argv) {
     return Add();
   } else if (DeleteCommand) {
     return Delete();
-  } else if (ExtractBasicFunctionsCommand){
+  } else if (ExtractBasicFunctionsCommand) {
     return ExtractBasicFunctions();
   } else if (GetCommand) {
     return Get();
