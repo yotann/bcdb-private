@@ -11,6 +11,7 @@
 #include <llvm/Support/ScopedPrinter.h>
 #include <llvm/Support/TarWriter.h>
 #include <llvm/Support/raw_ostream.h>
+#include <llvm/Transforms/Utils/CodeExtractor.h>
 
 #include "bcdb/AlignBitcode.h"
 
@@ -204,7 +205,15 @@ Error bcdb::ExtractBasicFunctions(BCDB &bcdb, StringRef dest_path) {
           WriteAlignedModule(*M, Buffer);
           Tar->append(Name + "/" + func_id + ".bc",
                       StringRef(Buffer.data(), Buffer.size()));
-        }
+        } /* else {
+          std::vector<BasicBlock*> BBs;
+          for (BasicBlock &BB : F)
+            BBs.push_back(&BB);
+          for (BasicBlock *BB : BBs) {
+            CodeExtractor CE({BB}, nullptr);
+            CE.extractCodeRegion();
+          }
+        } */
       }
     }
   }
