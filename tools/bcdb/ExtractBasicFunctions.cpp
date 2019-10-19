@@ -1,7 +1,7 @@
 #include "ExtractBasicFunctions.h"
 
+#include <algorithm>
 #include <llvm/ADT/DenseMap.h>
-#include <llvm/ADT/STLExtras.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/IR/Function.h>
@@ -171,7 +171,7 @@ static std::string hashModuleGlobals(Module &M) {
     if (F.hasName() && !F.isIntrinsic() &&
         F.getName() != "__gxx_personality_v0")
       Names.push_back(F.getName());
-  sort(Names.begin(), Names.end());
+  std::sort(Names.begin(), Names.end());
   hash_code h = hash_combine_range(Names.begin(), Names.end());
   if (Names.empty())
     h = 0;
