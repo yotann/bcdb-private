@@ -190,7 +190,12 @@ Error bcdb::ExtractBasicFunctions(BCDB &bcdb, StringRef dest_path) {
   if (!all_functions)
     return all_functions.takeError();
 
+  int i = 0;
   for (auto &func_id : *all_functions) {
+    // Prevent memory leaks.
+    if (i++ % 1024 == 0)
+      bcdb.ResetContext();
+
     auto MOrErr = bcdb.GetFunctionById(func_id);
     if (!MOrErr)
       return MOrErr.takeError();
