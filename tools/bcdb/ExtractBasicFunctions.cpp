@@ -147,8 +147,7 @@ static void hashType(Type *T, TypeNumberMap &TNM, raw_ostream &os,
     break;
 
   default:
-    os << "?";
-    break;
+    llvm_unreachable("unsupported type");
   }
 }
 
