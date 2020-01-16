@@ -40,6 +40,7 @@ rec {
     llvm = llvmForAlive;
   };
 
+  # Build with Clang instead of GCC (may produce different warnings/errors).
   bcdb-clang = callPackage ./build.nix {
     inherit (llvmPackages_7) stdenv;
     llvm = llvmPackages_7.llvm;
@@ -47,6 +48,7 @@ rec {
 
   bcdb = bcdb-llvm7;
 
+  # A version of LLVM that should be compatible with Alive2.
   llvmForAlive = (llvmPackages_9.llvm.override {
     debugVersion = true;
     enableSharedLibraries = true;
