@@ -32,6 +32,10 @@ static const char SQLITE_INIT_STMTS[] =
     "  key TEXT NOT NULL,          -- Entry key\n"
     "  value INTEGER NOT NULL      -- Entry value\n"
     ");\n"
+    "CREATE TABLE IF NOT EXISTS alive2(\n"
+    "  key INTEGER NOT NULL,       -- Function Id\n"
+    "  value INTEGER NOT NULL      -- Function Id to which `key` is equivalent to\n"
+    ");\n"
     "CREATE UNIQUE INDEX IF NOT EXISTS map_index ON map(vid, key);\n";
 
 namespace {
@@ -58,6 +62,7 @@ public:
   void head_set(llvm::StringRef name, memodb_value *value) override;
   ~sqlite_db() override { sqlite3_close(db); }
   void head_delete(llvm::StringRef name) override;
+  void alive2_set_equivalent(llvm::StringRef key, llvm::StringRef value);
 };
 } // end anonymous namespace
 
@@ -336,5 +341,14 @@ void sqlite_db::head_delete(llvm::StringRef name) {
   Stmt delete_stmt(db, "DELETE FROM head WHERE name = ?1");
   delete_stmt.bind_text(1, name);
   if (delete_stmt.step() != SQLITE_DONE)
+    fatal_error();
+}
+
+void
+sqlite_db::alive2_set_equivalent(llvm::StringRef key, llvm::StringRef value) {
+  Stmt insert_stmt(db, "INSERT INTO alive2(key, value) VALUES(?1, ?2)");
+  insert_stmt.bind_text(1, key);
+  insert_stmt.bind_text(2, value);
+  if (insert_stmt.step() != SQLITE_DONE)
     fatal_error();
 }

@@ -307,3 +307,7 @@ Expected<std::unique_ptr<Module>> BCDB::Get(StringRef Name) {
   BCDBSplitLoader Loader(*Context, db.get(), value);
   return JoinModule(Loader);
 }
+
+void BCDB::SetEquivalence(llvm::StringRef key, llvm::StringRef value) {
+  db->alive2_set_equivalent(key, value);
+}

@@ -51,6 +51,8 @@ public:
 
   llvm::Expected<std::unique_ptr<llvm::Module>>
   LoadParts(llvm::StringRef Name, std::map<std::string, std::string> &PartIDs);
+
+  void SetEquivalence(llvm::StringRef key, llvm::StringRef value);
 };
 
 } // end namespace bcdb
