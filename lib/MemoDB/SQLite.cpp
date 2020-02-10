@@ -33,13 +33,13 @@ static const char SQLITE_INIT_STMTS[] =
     "  value INTEGER NOT NULL      -- Entry value\n"
     ");\n"
     "CREATE TABLE IF NOT EXISTS alive2(\n"
-    "  key INTEGER NOT NULL,       -- Function Id\n"
-    "  value INTEGER NOT NULL      -- Function Id to which `key` is equivalent to\n"
-    "  v1 INTEGER NOT NULL         -- Transformation verifies\n"
-    "  v2 INTEGER NOT NULL         -- Reverse transformation verifies\n"
-    "  sameir INTEGER NOT NULL     -- If Alive IR of these function id is same\n"
-    "  t_timeout INTEGER NOT NULL  -- Transformation times out\n"
-    "  rt_timeout INTEGER NOT NULL -- Reverse transformation times out\n"
+    "  key INTEGER NOT NULL,        -- Function Id\n"
+    "  value INTEGER NOT NULL       -- Function Id to which `key` is equivalent to\n"
+    "  t_verifies INTEGER NOT NULL  -- Transformation verifies\n"
+    "  rt_verifies INTEGER NOT NULL -- Reverse transformation verifies\n"
+    "  sameir INTEGER NOT NULL      -- If Alive IR of these function id is same\n"
+    "  t_timeout INTEGER NOT NULL   -- Transformation times out\n"
+    "  rt_timeout INTEGER NOT NULL  -- Reverse transformation times out\n"
     ");\n"
     "CREATE UNIQUE INDEX IF NOT EXISTS map_index ON map(vid, key);\n";
 
@@ -358,7 +358,8 @@ sqlite_db::alive_set_info(llvm::StringRef key, llvm::StringRef value,
                           bool rt_verifies, bool same_aliveir, bool t_timeout,
                           bool rt_timeout) {
   Stmt insert_stmt(db,
-          "INSERT INTO alive2(key, value, t_verifies, rt_verifies, same_aliveir)"
+          "INSERT INTO alive2(key, value, t_verifies, rt_verifies, "
+              "same_aliveir, t_timeout, rt_timeout)"
               " VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7)");
   insert_stmt.bind_text(1, key);
   insert_stmt.bind_text(2, value);
