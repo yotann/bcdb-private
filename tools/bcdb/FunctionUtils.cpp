@@ -276,14 +276,10 @@ static void wait_for_one(unsigned &nchildren, BCDB &bcdb) {
                                                            != std::string::npos;
       bool translation2_failed = buffer.str().find("ERROR: Could not translate2 ")
                                                            != std::string::npos;
-
-      int t_timeout = buffer.str().find("ERROR: Timeout\n");
-      int rt_timeout = buffer.str().find("Reverse transformation doesn't verify!\nERROR: Timeout\n");
-
-      // For regular transformation, alive2 only prints 'ERROR: Timeout'
-      // Make sure this is a different 'Timeout' message
-      if (t_timeout > rt_timeout)
-        t_timeout = 0;
+      bool t_timeout = buffer.str().find("Transformation doesn't verify!\nERROR: Timeout\n")
+                                            != std::string::npos;
+      bool rt_timeout = buffer.str().find("Reverse transformation doesn't verify!\nERROR: Timeout\n")
+                                            != std::string::npos;
 
       // TODO: Maybe store failed translations in future.
       if (!translation1_failed && !translation2_failed) {
