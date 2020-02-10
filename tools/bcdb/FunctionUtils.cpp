@@ -272,17 +272,32 @@ static void wait_for_one(unsigned &nchildren, BCDB &bcdb) {
       int func_id1 = std::stoi(buffer.str().substr(fn1 + strlen("fid1=")));
       int func_id2 = std::stoi(buffer.str().substr(fn2 + strlen("fid2=")));
 
-      bool t_correct = buffer.str().find("Transformation seems to be correct!")
+      bool translation1_failed = buffer.str().find("ERROR: Could not translate1 ")
                                                            != std::string::npos;
-      bool rt_correct = buffer.str().find("Reverse transformation seems to be correct!")
+      bool translation2_failed = buffer.str().find("ERROR: Could not translate2 ")
                                                            != std::string::npos;
-      if (t_correct || rt_correct) {
-        if (t_correct) {
-          bcdb.SetEquivalence(std::to_string(func_id1), std::to_string(func_id2));
-        }
-        if (rt_correct) {
-          bcdb.SetEquivalence(std::to_string(func_id2), std::to_string(func_id1));
-        }
+
+      int t_timeout = buffer.str().find("ERROR: Timeout\n");
+      int rt_timeout = buffer.str().find("Reverse transformation doesn't verify!\nERROR: Timeout\n");
+
+      // For regular transformation, alive2 only prints 'ERROR: Timeout'
+      // Make sure this is a different 'Timeout' message
+      if (t_timeout > rt_timeout)
+        t_timeout = 0;
+
+      // TODO: Maybe store failed translations in future.
+      if (!translation1_failed && !translation2_failed) {
+        bool t_correct =
+                buffer.str().find("Transformation seems to be correct!")
+                != std::string::npos;
+        bool rt_correct =
+                buffer.str().find("Reverse transformation seems to be correct!")
+                != std::string::npos;
+        bool same_aliveir = buffer.str().find("Textual Alive IR is same!")
+                            != std::string::npos;
+
+        bcdb.SetAliveInfo(std::to_string(func_id1), std::to_string(func_id2),
+                          t_correct, rt_correct, same_aliveir, t_timeout, rt_timeout);
       }
     }
     else {

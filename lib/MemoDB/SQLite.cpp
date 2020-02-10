@@ -35,6 +35,11 @@ static const char SQLITE_INIT_STMTS[] =
     "CREATE TABLE IF NOT EXISTS alive2(\n"
     "  key INTEGER NOT NULL,       -- Function Id\n"
     "  value INTEGER NOT NULL      -- Function Id to which `key` is equivalent to\n"
+    "  v1 INTEGER NOT NULL         -- Transformation verifies\n"
+    "  v2 INTEGER NOT NULL         -- Reverse transformation verifies\n"
+    "  sameir INTEGER NOT NULL     -- If Alive IR of these function id is same\n"
+    "  t_timeout INTEGER NOT NULL  -- Transformation times out\n"
+    "  rt_timeout INTEGER NOT NULL -- Reverse transformation times out\n"
     ");\n"
     "CREATE UNIQUE INDEX IF NOT EXISTS map_index ON map(vid, key);\n";
 
@@ -62,7 +67,10 @@ public:
   void head_set(llvm::StringRef name, memodb_value *value) override;
   ~sqlite_db() override { sqlite3_close(db); }
   void head_delete(llvm::StringRef name) override;
-  void alive2_set_equivalent(llvm::StringRef key, llvm::StringRef value);
+  void
+  alive_set_info(llvm::StringRef key, llvm::StringRef value, bool t_verifies,
+                 bool rt_verifies, bool same_aliveir, bool t_timeout,
+                 bool rt_timeout);
 };
 } // end anonymous namespace
 
@@ -345,10 +353,20 @@ void sqlite_db::head_delete(llvm::StringRef name) {
 }
 
 void
-sqlite_db::alive2_set_equivalent(llvm::StringRef key, llvm::StringRef value) {
-  Stmt insert_stmt(db, "INSERT INTO alive2(key, value) VALUES(?1, ?2)");
+sqlite_db::alive_set_info(llvm::StringRef key, llvm::StringRef value,
+                          bool t_verifies,
+                          bool rt_verifies, bool same_aliveir, bool t_timeout,
+                          bool rt_timeout) {
+  Stmt insert_stmt(db,
+          "INSERT INTO alive2(key, value, t_verifies, rt_verifies, same_aliveir)"
+              " VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7)");
   insert_stmt.bind_text(1, key);
   insert_stmt.bind_text(2, value);
+  insert_stmt.bind_int(3, t_verifies);
+  insert_stmt.bind_int(4, rt_verifies);
+  insert_stmt.bind_int(5, same_aliveir);
+  insert_stmt.bind_int(6, t_timeout);
+  insert_stmt.bind_int(7, rt_timeout);
   if (insert_stmt.step() != SQLITE_DONE)
     fatal_error();
 }

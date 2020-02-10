@@ -33,7 +33,10 @@ public:
   virtual void head_set(llvm::StringRef name, memodb_value *value) = 0;
   virtual ~memodb_db() {}
   virtual void head_delete(llvm::StringRef name) = 0;
-  virtual void alive2_set_equivalent(llvm::StringRef key, llvm::StringRef value) = 0;
+  virtual void
+  alive_set_info(llvm::StringRef key, llvm::StringRef value, bool t_verifies,
+                 bool rt_verifies, bool same_aliveir, bool t_timeout,
+                 bool rt_timeout) = 0;
 };
 
 std::unique_ptr<memodb_db> memodb_db_open(llvm::StringRef uri,

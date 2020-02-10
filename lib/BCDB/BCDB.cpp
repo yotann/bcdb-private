@@ -308,6 +308,10 @@ Expected<std::unique_ptr<Module>> BCDB::Get(StringRef Name) {
   return JoinModule(Loader);
 }
 
-void BCDB::SetEquivalence(llvm::StringRef key, llvm::StringRef value) {
-  db->alive2_set_equivalent(key, value);
+void
+BCDB::SetAliveInfo(llvm::StringRef key, llvm::StringRef value, bool t_verifies,
+                   bool rt_verifies, bool same_aliveir, bool t_timeout,
+                   bool rt_timeout) {
+  db->alive_set_info(key, value, t_verifies, rt_verifies, same_aliveir, t_timeout,
+                     rt_timeout);
 }
