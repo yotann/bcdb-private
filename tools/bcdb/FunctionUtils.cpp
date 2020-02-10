@@ -246,11 +246,6 @@ static std::string getTmpFile(int pid, std::string suffix) {
 static void wait_for_one(unsigned &nchildren, BCDB &bcdb) {
   int wstatus;
   auto childpid = wait(&wstatus);
-  if (childpid == -1 || !WIFEXITED(wstatus)) {
-    fprintf(stderr, "Child %d didn't terminate normally\n", childpid);
-    nchildren--;
-    return;
-  }
 
   std::string filename1 = getTmpFile(childpid, "in1");
   std::string filename2 = getTmpFile(childpid, "in2");
@@ -258,7 +253,6 @@ static void wait_for_one(unsigned &nchildren, BCDB &bcdb) {
     fprintf(stderr, "Error removing file1 for pid %d\n", childpid);
     perror("remove() error\n");
   }
-
   if (remove(filename2.c_str()) == -1) {
     fprintf(stderr, "Error removing file2 for pid %d\n", childpid);
     perror("remove() error\n");
@@ -301,6 +295,10 @@ static void wait_for_one(unsigned &nchildren, BCDB &bcdb) {
       fprintf(stderr, "Error removing fileout for pid %d\n", childpid);
       perror("Error removing\n");
     }
+  }
+
+  if (childpid == -1 || !WIFEXITED(wstatus)) {
+    fprintf(stderr, "Child %d didn't terminate normally\n", childpid);
   }
 
   nchildren--;
