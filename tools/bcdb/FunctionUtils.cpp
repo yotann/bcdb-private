@@ -354,6 +354,12 @@ Error bcdb::WriteFnEquivalenceInformation(BCDB &bcdb, StringRef AliveTvPath) {
   }
   fprintf(stdout, "Function id processing done\n");
 
+  fprintf(stdout, "Bucket sizes:\n");
+  for (auto& element : funcid_buckets) {
+    fprintf(stdout, "%ld,", element.second.size());
+  }
+  fprintf(stdout, "\n");
+
   unsigned maxThreads = std::thread::hardware_concurrency();
   unsigned nchildren = 0;
   for (auto& element : funcid_buckets) {
