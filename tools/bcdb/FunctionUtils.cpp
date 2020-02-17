@@ -246,6 +246,9 @@ static void wait_for_one(unsigned &nchildren, BCDB &bcdb) {
   int wstatus;
   auto childpid = wait(&wstatus);
 
+  memodb_value result = memodb_value::map();
+  result["exit_code"] = wstatus;
+
   std::string filename1 = getTmpFile(childpid, "in1");
   std::string filename2 = getTmpFile(childpid, "in2");
   if (remove(filename1.c_str()) == -1) {
@@ -263,44 +266,67 @@ static void wait_for_one(unsigned &nchildren, BCDB &bcdb) {
   if (fout.is_open()) {
     std::stringstream buffer;
     buffer << fout.rdbuf();
+    result["stderr"] = memodb_value::bytes(buffer.str());
+
+    auto contains = [&](llvm::StringRef needle) {
+      return buffer.str().find(needle) != std::string::npos;
+    };
 
     // find function ids:
     auto fn1 = buffer.str().find("fid1=");
     auto fn2 = buffer.str().find("fid2=");
     if (fn1 != std::string::npos && fn2 != std::string::npos) {
-      int func_id1 = std::stoi(buffer.str().substr(fn1 + strlen("fid1=")));
-      int func_id2 = std::stoi(buffer.str().substr(fn2 + strlen("fid2=")));
+      std::string func_id1 = buffer.str().substr(fn1 + strlen("fid1="));
+      std::string func_id2 = buffer.str().substr(fn2 + strlen("fid2="));
+      func_id1 = func_id1.substr(0, func_id1.find('\n'));
+      func_id2 = func_id2.substr(0, func_id2.find('\n'));
+      memodb_ref func_ref1(func_id1);
+      memodb_ref func_ref2(func_id2);
 
-      bool translation1_failed =
-          buffer.str().find("ERROR: Could not translate1 ") !=
-          std::string::npos;
-      bool translation2_failed =
-          buffer.str().find("ERROR: Could not translate2 ") !=
-          std::string::npos;
-      bool t_timeout =
-          buffer.str().find(
-              "Transformation doesn't verify!\nERROR: Timeout\n") !=
-          std::string::npos;
-      bool rt_timeout =
-          buffer.str().find(
-              "Reverse transformation doesn't verify!\nERROR: Timeout\n") !=
-          std::string::npos;
+      if (contains("ERROR: Could not translate1 "))
+        result["translated_first"] = false;
+      if (contains("ERROR: Could not translate2 "))
+        result["translated_second"] = false;
 
-      // TODO: Maybe store failed translations in future.
-      if (!translation1_failed && !translation2_failed) {
-        bool t_correct =
-            buffer.str().find("Transformation seems to be correct!") !=
-            std::string::npos;
-        bool rt_correct =
-            buffer.str().find("Reverse transformation seems to be correct!") !=
-            std::string::npos;
-        bool same_aliveir =
-            buffer.str().find("Textual Alive IR is same!") != std::string::npos;
+      bool got_valid_ir = false;
 
-        // bcdb.SetAliveInfo(std::to_string(func_id1), std::to_string(func_id2),
-        //                  t_correct, rt_correct, same_aliveir, t_timeout,
-        //                  rt_timeout);
+      if (contains("Transformation doesn't verify!")) {
+        got_valid_ir = true;
+        if (contains("Transformation doesn't verify!\nERROR: Timeout")) {
+          result["forward_timeout"] = true;
+        } else {
+          result["forward_timeout"] = false;
+          result["forward_valid"] = false;
+        }
+      } else if (contains("Transformation seems to be correct!")) {
+        got_valid_ir = true;
+        result["forward_timeout"] = false;
+        result["forward_valid"] = true;
       }
+
+      if (contains("Reverse transformation doesn't verify!")) {
+        got_valid_ir = true;
+        if (contains(
+                "Reverse transformation doesn't verify!\nERROR: Timeout")) {
+          result["backward_timeout"] = true;
+        } else {
+          result["backward_timeout"] = false;
+          result["backward_valid"] = false;
+        }
+      } else if (contains("Reverse transformation seems to be correct!")) {
+        got_valid_ir = true;
+        result["backward_timeout"] = false;
+        result["backward_valid"] = true;
+      }
+
+      if (got_valid_ir) {
+        result["translated_first"] = true;
+        result["translated_second"] = true;
+        result["identical_alive_ir"] = contains("Textual Alive IR is same!");
+      }
+
+      bcdb.get_db().call_set("alive-tv", {func_ref1, func_ref2},
+                             bcdb.get_db().put(result));
     } else {
       fprintf(stderr, "Output file for pid %d doesn't contain function ids\n",
               childpid);
@@ -329,8 +355,9 @@ Error bcdb::WriteFnEquivalenceInformation(BCDB &bcdb, StringRef AliveTvPath) {
   std::unordered_map<std::string, std::vector<std::string>> funcid_buckets;
   unsigned i = 0;
   for (auto &func_id : *all_functions) {
-    if (i % (total / 10) == 0) {
-      fprintf(stdout, "%d0%% function ids processed...\n", progressCounter++);
+    if (10 * i / total > progressCounter) {
+      progressCounter = 10 * i / total;
+      fprintf(stdout, "%d0%% function ids processed...\n", progressCounter);
     }
 
     // Prevent memory leaks.
