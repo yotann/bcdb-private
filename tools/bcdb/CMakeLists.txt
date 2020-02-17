@@ -4,7 +4,7 @@ set(LLVM_LINK_COMPONENTS
 )
 add_llvm_tool(bcdb
   bcdb.cpp
-  ExtractBasicFunctions.cpp
+  FunctionUtils.cpp
 )
 tool_link_libraries(bcdb
   BCDB

@@ -21,7 +21,7 @@
 #include <memory>
 #include <string>
 
-#include "ExtractBasicFunctions.h"
+#include "FunctionUtils.h"
 
 using namespace bcdb;
 using namespace llvm;
@@ -94,15 +94,31 @@ static cl::SubCommand
     ExtractBasicFunctionsCommand("extract-basic-functions",
                                  "Extract basic functions to tar file");
 
+static cl::SubCommand
+        WriteFnEquivalenceInformationCommand("write-fn-equivalence-info",
+                                     "Write Function equivalence information back to bcdb.");
+
 static cl::opt<std::string>
     ExtractBasicFunctionsOutputFilename("o", cl::desc("<output tar file>"),
                                         cl::sub(ExtractBasicFunctionsCommand),
                                         cl::Required);
 
+static cl::opt<std::string>
+        AliveTvPath("alive-tv-path", cl::desc("<alive-tv-path>"),
+                                            cl::sub(WriteFnEquivalenceInformationCommand),
+                                            cl::Required);
+
 static int ExtractBasicFunctions() {
   ExitOnError Err("bcdb extract-basic-functions: ");
   std::unique_ptr<BCDB> db = Err(BCDB::Open(GetUri()));
   Err(ExtractBasicFunctions(*db, ExtractBasicFunctionsOutputFilename));
+  return 0;
+}
+
+static int WriteFnEquivalenceInformation() {
+  ExitOnError Err("bcdb write-fn-equivalence-info: ");
+  std::unique_ptr<BCDB> db = Err(BCDB::Open(GetUri()));
+  Err(WriteFnEquivalenceInformation(*db, AliveTvPath));
   return 0;
 }
 
@@ -389,6 +405,8 @@ int main(int argc, char **argv) {
     return Evaluate();
   } else if (ExtractBasicFunctionsCommand) {
     return ExtractBasicFunctions();
+  } else if (WriteFnEquivalenceInformationCommand) {
+    return WriteFnEquivalenceInformation();
   } else if (GetCommand) {
     return Get();
   } else if (GetFunctionCommand) {
