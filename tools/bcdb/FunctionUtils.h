@@ -9,7 +9,8 @@
 namespace bcdb {
 
 llvm::Error ExtractBasicFunctions(BCDB &bcdb, llvm::StringRef dest_path);
-llvm::Error WriteFnEquivalenceInformation(BCDB &bcdb, llvm::StringRef AliveTvPath);
+llvm::Error WriteFnEquivalenceInformation(BCDB &bcdb,
+                                          llvm::StringRef AliveTvPath);
 } // end namespace bcdb
 
 #endif

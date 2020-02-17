@@ -94,9 +94,9 @@ static cl::SubCommand
     ExtractBasicFunctionsCommand("extract-basic-functions",
                                  "Extract basic functions to tar file");
 
-static cl::SubCommand
-        WriteFnEquivalenceInformationCommand("write-fn-equivalence-info",
-                                     "Write Function equivalence information back to bcdb.");
+static cl::SubCommand WriteFnEquivalenceInformationCommand(
+    "write-fn-equivalence-info",
+    "Write Function equivalence information back to bcdb.");
 
 static cl::opt<std::string>
     ExtractBasicFunctionsOutputFilename("o", cl::desc("<output tar file>"),
@@ -104,9 +104,8 @@ static cl::opt<std::string>
                                         cl::Required);
 
 static cl::opt<std::string>
-        AliveTvPath("alive-tv-path", cl::desc("<alive-tv-path>"),
-                                            cl::sub(WriteFnEquivalenceInformationCommand),
-                                            cl::Required);
+    AliveTvPath("alive-tv-path", cl::desc("<alive-tv-path>"),
+                cl::sub(WriteFnEquivalenceInformationCommand), cl::Required);
 
 static int ExtractBasicFunctions() {
   ExitOnError Err("bcdb extract-basic-functions: ");

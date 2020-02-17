@@ -1,10 +1,10 @@
 #include "FunctionUtils.h"
 
 #include <cstdio>
+#include <cstdlib>
 #include <fcntl.h>
 #include <fstream>
 #include <sstream>
-#include <cstdlib>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <thread>
@@ -27,7 +27,6 @@
 #include <llvm/Transforms/Utils/CodeExtractor.h>
 
 #include "bcdb/AlignBitcode.h"
-
 
 using namespace bcdb;
 using namespace llvm;
@@ -272,33 +271,38 @@ static void wait_for_one(unsigned &nchildren, BCDB &bcdb) {
       int func_id1 = std::stoi(buffer.str().substr(fn1 + strlen("fid1=")));
       int func_id2 = std::stoi(buffer.str().substr(fn2 + strlen("fid2=")));
 
-      bool translation1_failed = buffer.str().find("ERROR: Could not translate1 ")
-                                                           != std::string::npos;
-      bool translation2_failed = buffer.str().find("ERROR: Could not translate2 ")
-                                                           != std::string::npos;
-      bool t_timeout = buffer.str().find("Transformation doesn't verify!\nERROR: Timeout\n")
-                                            != std::string::npos;
-      bool rt_timeout = buffer.str().find("Reverse transformation doesn't verify!\nERROR: Timeout\n")
-                                            != std::string::npos;
+      bool translation1_failed =
+          buffer.str().find("ERROR: Could not translate1 ") !=
+          std::string::npos;
+      bool translation2_failed =
+          buffer.str().find("ERROR: Could not translate2 ") !=
+          std::string::npos;
+      bool t_timeout =
+          buffer.str().find(
+              "Transformation doesn't verify!\nERROR: Timeout\n") !=
+          std::string::npos;
+      bool rt_timeout =
+          buffer.str().find(
+              "Reverse transformation doesn't verify!\nERROR: Timeout\n") !=
+          std::string::npos;
 
       // TODO: Maybe store failed translations in future.
       if (!translation1_failed && !translation2_failed) {
         bool t_correct =
-                buffer.str().find("Transformation seems to be correct!")
-                != std::string::npos;
+            buffer.str().find("Transformation seems to be correct!") !=
+            std::string::npos;
         bool rt_correct =
-                buffer.str().find("Reverse transformation seems to be correct!")
-                != std::string::npos;
-        bool same_aliveir = buffer.str().find("Textual Alive IR is same!")
-                            != std::string::npos;
+            buffer.str().find("Reverse transformation seems to be correct!") !=
+            std::string::npos;
+        bool same_aliveir =
+            buffer.str().find("Textual Alive IR is same!") != std::string::npos;
 
-        //bcdb.SetAliveInfo(std::to_string(func_id1), std::to_string(func_id2),
-        //                  t_correct, rt_correct, same_aliveir, t_timeout, rt_timeout);
+        // bcdb.SetAliveInfo(std::to_string(func_id1), std::to_string(func_id2),
+        //                  t_correct, rt_correct, same_aliveir, t_timeout,
+        //                  rt_timeout);
       }
-    }
-    else {
-      fprintf(stderr,
-              "Output file for pid %d doesn't contain function ids\n",
+    } else {
+      fprintf(stderr, "Output file for pid %d doesn't contain function ids\n",
               childpid);
     }
 
@@ -321,7 +325,7 @@ Error bcdb::WriteFnEquivalenceInformation(BCDB &bcdb, StringRef AliveTvPath) {
     return all_functions.takeError();
 
   auto total = all_functions.get().size();
-  unsigned  progressCounter = 0;
+  unsigned progressCounter = 0;
   std::unordered_map<std::string, std::vector<std::string>> funcid_buckets;
   unsigned i = 0;
   for (auto &func_id : *all_functions) {
@@ -355,15 +359,15 @@ Error bcdb::WriteFnEquivalenceInformation(BCDB &bcdb, StringRef AliveTvPath) {
   fprintf(stdout, "Function id processing done\n");
 
   fprintf(stdout, "Bucket sizes:\n");
-  for (auto& element : funcid_buckets) {
+  for (auto &element : funcid_buckets) {
     fprintf(stdout, "%ld,", element.second.size());
   }
   fprintf(stdout, "\n");
 
   unsigned maxThreads = std::thread::hardware_concurrency();
   unsigned nchildren = 0;
-  for (auto& element : funcid_buckets) {
-    auto& values = element.second;
+  for (auto &element : funcid_buckets) {
+    auto &values = element.second;
     unsigned memLeakCounter = 0;
     for (size_t i = 0; i < values.size(); i++) {
       for (size_t j = i + 1; j < values.size(); j++) {
@@ -424,7 +428,8 @@ Error bcdb::WriteFnEquivalenceInformation(BCDB &bcdb, StringRef AliveTvPath) {
           }
 
           std::string temp_out = getTmpFile(getpid(), "out");
-          int fd_out = open(temp_out.c_str(), O_CREAT | O_RDWR | O_EXCL, S_IRUSR);
+          int fd_out =
+              open(temp_out.c_str(), O_CREAT | O_RDWR | O_EXCL, S_IRUSR);
           if (fd_out == -1) {
             printf("Output file %s open failed!\n", temp_out.c_str());
             perror("Error opening output file\n");
@@ -447,8 +452,8 @@ Error bcdb::WriteFnEquivalenceInformation(BCDB &bcdb, StringRef AliveTvPath) {
 
           // redirect all errors to file
           dup2(fd_out, 2);
-          execl(AliveTvPath.str().c_str(), "alive-tv",
-                  "--bidirectional", temp_in1.c_str(), temp_in2.c_str(), NULL);
+          execl(AliveTvPath.str().c_str(), "alive-tv", "--bidirectional",
+                temp_in1.c_str(), temp_in2.c_str(), NULL);
           perror("Exec failed!");
           std::exit(-1);
         }
