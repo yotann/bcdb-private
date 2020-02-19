@@ -402,6 +402,12 @@ Error bcdb::WriteFnEquivalenceInformation(BCDB &bcdb, StringRef AliveTvPath) {
         if (memLeakCounter++ % 512 == 0)
           bcdb.ResetContext();
 
+        // check if already cached
+        memodb_ref ref1(values[i]);
+        memodb_ref ref2(values[j]);
+        if (bcdb.get_db().call_get("alive-tv", {ref1, ref2}))
+          continue;
+
         auto MOrErr = bcdb.GetFunctionById(values[i]);
         if (!MOrErr)
           return MOrErr.takeError();
