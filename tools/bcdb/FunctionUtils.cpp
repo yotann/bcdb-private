@@ -246,6 +246,12 @@ static void wait_for_one(unsigned &nchildren, BCDB &bcdb) {
   int wstatus;
   auto childpid = wait(&wstatus);
 
+  if (WEXITSTATUS(wstatus) == 127) {
+    // Exec failed or command not found.
+    // The user probably gave the wrong path to alive-tv.
+    report_fatal_error("alive-tv command could not be executed");
+  }
+
   memodb_value result = memodb_value::map();
   result["exit_code"] = WEXITSTATUS(wstatus);
 
@@ -485,11 +491,10 @@ Error bcdb::WriteFnEquivalenceInformation(BCDB &bcdb, StringRef AliveTvPath) {
 
           // redirect all errors to file
           dup2(fd_out, 2);
-          execl("/usr/bin/timeout", "timeout", "3",
-                AliveTvPath.str().c_str(), "--bidirectional",
-                temp_in1.c_str(), temp_in2.c_str(), NULL);
+          execlp("timeout", "timeout", "3", AliveTvPath.str().c_str(),
+                 "--bidirectional", temp_in1.c_str(), temp_in2.c_str(), NULL);
           perror("Exec failed!");
-          std::exit(-1);
+          std::exit(127); // indicate that we couldn't run alive-tv
         }
 
         // this is parent:
