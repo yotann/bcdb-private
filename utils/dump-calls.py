@@ -7,12 +7,27 @@ import cbor2
 import pprint
 import sqlite3
 import sys
+import argparse
 
-if len(sys.argv) != 3:
-    print(f'Usage: {sys.argv[0]} path/to/database name_of_function')
+def str2bool(v):
+    return v.lower() in ['true', '1', 't']
 
-function_name = sys.argv[2]
-conn = sqlite3.connect(sys.argv[1])
+parser = argparse.ArgumentParser()
+parser.add_argument('database_file', help='Path to the database file')
+parser.add_argument('fn_name', help='Name of the function')
+parser.add_argument('--exit_code', help='If given, only calls with these exit codes will be printed ', nargs='*', type=int)
+parser.add_argument('--forward_valid', type=str2bool)
+parser.add_argument('--forward_timeout', type=str2bool)
+parser.add_argument('--backward_valid', type=str2bool)
+parser.add_argument('--backward_timeout', type=str2bool)
+parser.add_argument('--translated_first', type=str2bool)
+parser.add_argument('--translated_second', type=str2bool)
+parser.add_argument('--identical_alive_ir', type=str2bool)
+
+cl_args = parser.parse_args()
+
+function_name = cl_args.fn_name
+conn = sqlite3.connect(cl_args.database_file)
 cursor = conn.cursor()
 
 # A reference to one of the values in the BCDB.
@@ -42,6 +57,28 @@ def load_value(ref):
     else:
         assert False, f'Unsupported value type {typ}'
 
+# returns True if input result object matches the filter
+def filter_result(result):
+    if cl_args.exit_code and not result['exit_code'] in cl_args.exit_code:
+        return False
+
+    if cl_args.forward_valid is not None and result.get('forward_valid') != cl_args.forward_valid:
+        return False
+    if cl_args.forward_timeout is not None and result.get('forward_timeout') != cl_args.forward_timeout:
+        return False
+    if cl_args.backward_valid is not None and result.get('backward_valid') != cl_args.backward_valid:
+        return False
+    if cl_args.backward_timeout is not None and result.get('backward_timeout') != cl_args.backward_timeout:
+        return False
+    if cl_args.translated_first is not None and result.get('translated_first') != cl_args.translated_first:
+        return False
+    if cl_args.translated_second is not None and result.get('translated_second') != cl_args.translated_second:
+        return False
+    if cl_args.identical_alive_ir is not None and result.get('identical_alive_ir') != cl_args.identical_alive_ir:
+        return False
+
+    return True
+
 # Look up the function ID based on its name.
 cursor.execute('SELECT fid FROM func WHERE name = ?', (function_name,))
 fid, = cursor.fetchone()
@@ -63,4 +100,5 @@ while parent_queue:
         parent_queue.append((cid, args))
         if result is not None:
             result = load_value(Ref(str(result)))
-            print(f'{function_name}({", ".join(str(arg) for arg in args)}) = {pprint.pformat(result)}')
+            if filter_result(result):
+                print(f'{function_name}({", ".join(str(arg) for arg in args)}) = {pprint.pformat(result)}')
