@@ -30,6 +30,7 @@ NodeOrCID refinements_for_group(Evaluator &evaluator, NodeRef options,
                                 NodeRef members);
 NodeOrCID grouped_refinements(Evaluator &evaluator, NodeRef options,
                               NodeRef mod);
+NodeOrCID test_interp(Evaluator &evaluator, NodeRef options);
 
 extern const char *actual_size_version;
 extern const char *candidates_version;
@@ -44,6 +45,7 @@ extern const char *outlined_module_version;
 extern const char *optimized_version;
 extern const char *refinements_for_group_version;
 extern const char *grouped_refinements_version;
+extern const char *test_interp_version;
 
 void registerFuncs(Evaluator &evaluator);
 

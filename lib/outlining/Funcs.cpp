@@ -20,6 +20,7 @@
 #include <llvm/Transforms/Scalar/SimplifyCFG.h>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include "bcdb/AlignBitcode.h"
 #include "bcdb/Split.h"
@@ -62,6 +63,7 @@ const char *smout::optimized_version = "smout.optimized_v5";
 const char *smout::refinements_for_group_version =
     "smout.refinements_for_group_v0";
 const char *smout::grouped_refinements_version = "smout.grouped_refinements_v3";
+const char *smout::test_interp_version = "smout.test_interp_v0";
 
 static FunctionAnalysisManager makeFAM(const Node &options) {
   OutliningCandidatesOptions cand_opts;
@@ -1245,6 +1247,10 @@ NodeOrCID smout::grouped_refinements(Evaluator &evaluator, NodeRef options,
   return grouped_callees;
 }
 
+NodeOrCID smout::test_interp(Evaluator &evaluator, NodeRef options) {
+  return Node(555);
+}
+
 void smout::registerFuncs(Evaluator &evaluator) {
   evaluator.registerFunc(actual_size_version, &actual_size);
   evaluator.registerFunc(candidates_version, &candidates);
@@ -1260,4 +1266,5 @@ void smout::registerFuncs(Evaluator &evaluator) {
   evaluator.registerFunc(optimized_version, &optimized);
   evaluator.registerFunc(refinements_for_group_version, &refinements_for_group);
   evaluator.registerFunc(grouped_refinements_version, &grouped_refinements);
+  evaluator.registerFunc(test_interp_version, &test_interp);
 }
