@@ -1247,8 +1247,12 @@ NodeOrCID smout::grouped_refinements(Evaluator &evaluator, NodeRef options,
   return grouped_callees;
 }
 
-NodeOrCID smout::test_interp(Evaluator &evaluator, NodeRef options) {
-  return Node(555);
+NodeOrCID smout::test_interp(Evaluator &evaluator, NodeRef options, NodeRef func, 
+                             NodeRef inputs) {
+  auto result = evaluator.evaluateAsync("alive.interpret", Node(node_map_arg),
+                                        func, Node(node_map_arg));// FIXME For now, don't pass the other args
+  auto n = *result;
+  return n;
 }
 
 void smout::registerFuncs(Evaluator &evaluator) {
