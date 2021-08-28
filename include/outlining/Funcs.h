@@ -30,7 +30,7 @@ NodeOrCID refinements_for_group(Evaluator &evaluator, NodeRef options,
                                 NodeRef members);
 NodeOrCID grouped_refinements(Evaluator &evaluator, NodeRef options,
                               NodeRef mod);
-NodeOrCID test_interp(Evaluator &evaluator, NodeRef options, NodeRef func, 
+NodeOrCID test_interp(Evaluator &evaluator, NodeRef options, NodeRef func,
                       NodeRef inputs);
 
 extern const char *actual_size_version;
