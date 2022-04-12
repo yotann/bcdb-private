@@ -1,2 +1,0 @@
-; RUN: rm -rf %t
-; RUN: memodb init -store rocksdb:%t

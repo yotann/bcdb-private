@@ -1,4 +1,0 @@
-RUN: %shelltest --with-store=client -t %t %s
-$ memodb evaluate /call/test.ackermann/uAXEAAQI,uAXEAAQI
-...
-uAXEAAQc

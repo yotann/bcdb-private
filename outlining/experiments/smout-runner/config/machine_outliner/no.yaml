@@ -1,4 +1,0 @@
-# @package _global_
-params:
-  machine_outliner:
-    enable_arg: "--enable-machine-outliner=never"
